@@ -31,6 +31,7 @@ export default async function handler(req, res) {
                     cardDetail: true ,
                     active : true,
                     gender : gender , 
+                    role: 'customer',
                     dateOfBirth : dateOfBirth
                 }, { new: true } // Return the updated document
             );

@@ -5,6 +5,10 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Badge, Avatar, AvatarImage, AvatarFallback } from "../../components/dashboard/CustomUiComponents";
 import GenericTable from '../../components/dashboard/Table';
+import User from '../../../model/User'
+import { getServerSession } from 'next-auth'
+import connectToDatabase from '../../../middlewear/db'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 const UserTable = () => {
   // Dummy data
@@ -237,3 +241,16 @@ const UserTable = () => {
 };
 
 export default UserTable;
+
+export async function getServerSideProps(context) {
+  await connectToDatabase();
+  const session = await getServerSession(context.req, context.res, authOptions);
+  if (session) {
+    const user = await User.findOne({ "email": session.user.email });
+    console.log(user)
+    if (user.role === "admin") {
+      return { props: {} };
+    }
+  }
+  return { redirect: { destination: '/', permanent: false } };
+}

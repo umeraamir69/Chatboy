@@ -4,6 +4,12 @@ import Navbar from '../../components/dashboard/Navbar'
 import CardDataStats from '@/components/dashboard/Ecomerece/CardDataStats'
 import ChartOne from '@/components/dashboard/Ecomerece/ChartOne'
 import ChartTwo from '@/components/dashboard/Ecomerece/ChartTwo'
+import User from '../../../model/User'
+import { getServerSession } from 'next-auth'
+import connectToDatabase from '../../../middlewear/db'
+import { authOptions } from '../api/auth/[...nextauth]'
+
+
 const Dashboard = () => {
   return (
     <DashboardLayout>
@@ -66,3 +72,16 @@ const Dashboard = () => {
 }
 
 export default Dashboard
+
+export async function getServerSideProps(context) {
+  await connectToDatabase();
+  const session = await getServerSession(context.req, context.res, authOptions);
+  if (session) {
+    const user = await User.findOne({ "email": session.user.email });
+    console.log(user)
+    if (user.role === "admin") {
+      return { props: {} };
+    }
+  }
+  return { redirect: { destination: '/', permanent: false } };
+}
