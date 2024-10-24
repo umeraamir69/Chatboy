@@ -1,18 +1,13 @@
-import React, {useEffect, useState} from 'react';
-import {getServerSession} from "next-auth/next";
-import {authOptions} from "../api/auth/[...nextauth]";
-import {toast} from 'react-toastify';
-import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../api/auth/[...nextauth]";
+import { toast } from 'react-toastify';
 import User from '../../../model/User';
-
-
-
-
-
-
+import { useRouter } from 'next/router';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
+// Stripe public key
 const stripePromise = loadStripe('pk_test_51PCp70L2gPnd81nsV83fHyaHCMzHmg0T3BRerMe3nJgi75YabgsP74FxK0DajRUsXmUBzY8qSvFwNu8ahXhfEpHw00zimU1ZmZ');
 
 const AccountDetails = ({ name, uemail }) => {
@@ -21,12 +16,24 @@ const AccountDetails = ({ name, uemail }) => {
     const elements = useElements();
 
     const [formData, setFormData] = useState({
-        email: uemail,
-        name: name ? name : '',
+        email: uemail, // Pre-filled email
+        name: name || '',
+        contact: '',
         gender: '',
+        dateOfBirth: '',
         active: true,
         joinDate: new Date().toISOString().slice(0, 10), // Format as yyyy-mm-dd
     });
+
+
+    useEffect(() => {
+        const cookieData = Cookies.get('formData');
+        if (cookieData) {
+           console.log(cookieData)
+        }
+    }, []);
+
+    
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -39,21 +46,8 @@ const AccountDetails = ({ name, uemail }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Check gender and contact
-        if (formData.gender.length == 0) {
-            return toast.error(`Enter Data Correctly`, {
-                position: 'top-right',
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: 'dark',
-            });
-        }
-
-        if (formData.whatsappContact.length < 9 || formData.whatsappContact.length > 15) {
-            return toast.error(`Enter Correct Contact Number.`, {
+        if (formData.gender.length === 0 || formData.contact.length < 9 || formData.contact.length > 15) {
+            return toast.error('Please enter valid data.', {
                 position: 'top-right',
                 autoClose: 3000,
                 hideProgressBar: false,
@@ -68,7 +62,6 @@ const AccountDetails = ({ name, uemail }) => {
             return;
         }
 
-        // Get the card details from the Stripe element
         const cardElement = elements.getElement(CardElement);
 
         try {
@@ -92,7 +85,7 @@ const AccountDetails = ({ name, uemail }) => {
             const result = await response.json();
 
             if (response.ok) {
-                toast.info(`Your Account is sent for Verification ${result.customer.name}`, {
+                toast.info(`Your account is sent for verification, ${result.customer.name}`, {
                     position: 'top-right',
                     autoClose: 3000,
                     hideProgressBar: false,
@@ -106,8 +99,8 @@ const AccountDetails = ({ name, uemail }) => {
                 throw new Error(result.error);
             }
         } catch (error) {
-            console.log(error);
-            return toast.error('An Error Occurred', {
+            console.error(error);
+            return toast.error('An error occurred', {
                 position: 'top-right',
                 autoClose: 3000,
                 hideProgressBar: false,
@@ -120,54 +113,59 @@ const AccountDetails = ({ name, uemail }) => {
     };
 
     return (
-        <div className="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
+        <div className="min-h-screen p-6 bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
             <div className="container max-w-screen-lg mx-auto">
-                <div>
-                    <h2>{uemail}</h2>
-                    <form className="bg-white rounded shadow-lg p-4 px-4 md:p-8 mb-6" onSubmit={handleSubmit}>
-                        <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 lg:grid-cols-3">
-                            <div className="text-gray-600">
-                                <p className="font-medium text-lg">Personal Details</p>
-                                <p>Please fill out all the fields.</p>
-                            </div>
-
+                <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 rounded shadow-lg p-8">
+                    <h2 className="text-2xl font-semibold mb-4">Account Details</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
                             <div className="lg:col-span-2">
-                                <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                                    <div className="md:col-span-2 lg:col-span-3">
-                                        <label htmlFor="name">Full Name</label>
+                                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                                    <div className="md:col-span-2">
+                                        <label htmlFor="email" className="block text-sm font-medium">Email</label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            id="email"
+                                            value={formData.email}
+                                            readOnly
+                                            className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label htmlFor="name" className="block text-sm font-medium">Full Name</label>
                                         <input
                                             type="text"
                                             name="name"
                                             id="name"
-                                            className="h-10 border mt-1 rounded capitalize px-4 w-full bg-gray-50"
                                             value={formData.name}
                                             onChange={handleChange}
                                             required
+                                            className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
                                         />
                                     </div>
-                                  
                                     <div className="md:col-span-2">
-                                        <label htmlFor="whatsappContact">WhatsApp Contact</label>
+                                        <label htmlFor="contact" className="block text-sm font-medium">Contact Number</label>
                                         <input
-                                            type="number"
-                                            name="whatsappContact"
-                                            id="whatsappContact"
-                                            className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                                            value={formData.whatsappContact}
+                                            type="text"
+                                            name="contact"
+                                            id="contact"
+                                            value={formData.contact}
                                             onChange={handleChange}
                                             required
-                                            placeholder="+123445678"
+                                            placeholder="+1234567890"
+                                            className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
                                         />
                                     </div>
-
                                     <div className="md:col-span-1">
-                                        <label htmlFor="gender">Gender</label>
+                                        <label htmlFor="gender" className="block text-sm font-medium">Gender</label>
                                         <select
                                             name="gender"
                                             id="gender"
-                                            className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
                                             value={formData.gender}
                                             onChange={handleChange}
+                                            required
+                                            className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
                                         >
                                             <option value="">Select</option>
                                             <option value="male">Male</option>
@@ -175,10 +173,20 @@ const AccountDetails = ({ name, uemail }) => {
                                             <option value="other">Other</option>
                                         </select>
                                     </div>
-
-                                    {/* Card Details */}
-                                    <div className="md:col-span-3 lg:col-span-3">
-                                        <label>Card Details</label>
+                                    <div className="md:col-span-1">
+                                        <label htmlFor="dateOfBirth" className="block text-sm font-medium">Date of Birth</label>
+                                        <input
+                                            type="date"
+                                            name="dateOfBirth"
+                                            id="dateOfBirth"
+                                            value={formData.dateOfBirth}
+                                            onChange={handleChange}
+                                            required
+                                            className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium">Card Details</label>
                                         <CardElement
                                             options={{
                                                 style: {
@@ -194,22 +202,21 @@ const AccountDetails = ({ name, uemail }) => {
                                                     },
                                                 },
                                             }}
+                                            className="p-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded"
                                         />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="md:col-span-5 text-right">
-                            <div className="inline-flex items-end">
-                                <button
-                                    type="submit"
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                    disabled={!stripe}
-                                >
-                                    Submit
-                                </button>
-                            </div>
+                        <div className="mt-6 text-right">
+                            <button
+                                type="submit"
+                                className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                disabled={!stripe}
+                            >
+                                Submit
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -218,6 +225,7 @@ const AccountDetails = ({ name, uemail }) => {
     );
 };
 
+// Stripe wrapper to use Elements
 const StripeWrapper = (props) => {
     return (
         <Elements stripe={stripePromise}>
@@ -227,9 +235,6 @@ const StripeWrapper = (props) => {
 };
 
 export default StripeWrapper;
-
-
-
 
 export async function getServerSideProps(context) {
     const session = await getServerSession(context.req, context.res, authOptions);
@@ -241,20 +246,15 @@ export async function getServerSideProps(context) {
         };
     }
 
-    const user = await User.findOne({"email": session.user.email})
-    if (!user.email || !user.name   || !user.gender || !user.joinDate) {
+    const user = await User.findOne({"email": session.user.email});
+    if (!user.email || !user.name || !user.gender || !user.joinDate) {
         return {
             props: {
-                "name": session.user.name != null
-                    ? session.user.name
-                    : "",
+                "name": session.user.name || "",
                 "uemail": session.user.email
             }
         };
-      } 
-      else {
-        return { redirect: { destination: "/" } }; //profile
-      }
-
-   
+    } else {
+        return { redirect: { destination: "/" } };
+    }
 }
