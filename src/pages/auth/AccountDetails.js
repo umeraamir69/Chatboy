@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../api/auth/[...nextauth]";
 import { toast } from 'react-toastify';
 import User from '../../../model/User';
+import Cookies from 'js-cookie';
 import { useRouter } from 'next/router';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -14,26 +15,28 @@ const AccountDetails = ({ name, uemail }) => {
     const router = useRouter();
     const stripe = useStripe();
     const elements = useElements();
-
+    
+    const [loading, setLoading] = useState(false); // State for loading
     const [formData, setFormData] = useState({
         email: uemail, // Pre-filled email
         name: name || '',
-        contact: '',
         gender: '',
         dateOfBirth: '',
-        active: true,
         joinDate: new Date().toISOString().slice(0, 10), // Format as yyyy-mm-dd
     });
-
 
     useEffect(() => {
         const cookieData = Cookies.get('formData');
         if (cookieData) {
-           console.log(cookieData)
+            const parsedData = JSON.parse(cookieData);
+            setFormData({
+                email: uemail, // Pre-filled email  
+                name: parsedData.fname + ' ' + parsedData.lname || '',
+                gender: parsedData.gender ? parsedData.gender : '',
+                dateOfBirth: parsedData.dateOfBirth ? parsedData.dateOfBirth : ''
+            });
         }
-    }, []);
-
-    
+    }, []); // Runs once when the component mounts to load the data from the cookie
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -45,8 +48,10 @@ const AccountDetails = ({ name, uemail }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true); // Start loading when submission begins
 
-        if (formData.gender.length === 0 || formData.contact.length < 9 || formData.contact.length > 15) {
+        if (formData.gender.length === 0) {
+            setLoading(false);
             return toast.error('Please enter valid data.', {
                 position: 'top-right',
                 autoClose: 3000,
@@ -59,16 +64,35 @@ const AccountDetails = ({ name, uemail }) => {
         }
 
         if (!stripe || !elements) {
+            console.log("Stripe.js has not yet loaded.");
+            setLoading(false); // Stop loading if Stripe is not loaded
             return;
         }
 
         const cardElement = elements.getElement(CardElement);
 
         try {
-            const { paymentMethod } = await stripe.createPaymentMethod({
+            const { paymentMethod, error } = await stripe.createPaymentMethod({
                 type: 'card',
                 card: cardElement,
+                billing_details: {
+                    name: formData.name,
+                },
             });
+        
+            if (error) {
+                console.error("Payment method error:", error.message);
+                setLoading(false); // Stop loading on error
+                return toast.error(`Payment method error: ${error.message}`, {
+                    position: 'top-right',
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: 'dark',
+                });
+            }
 
             const response = await fetch('/api/payment/createCustomer', {
                 method: 'POST',
@@ -79,6 +103,8 @@ const AccountDetails = ({ name, uemail }) => {
                     email: formData.email,
                     name: formData.name,
                     paymentMethodId: paymentMethod.id,
+                    gender: formData.gender,
+                    dateOfBirth : formData.dateOfBirth,
                 }),
             });
 
@@ -99,8 +125,8 @@ const AccountDetails = ({ name, uemail }) => {
                 throw new Error(result.error);
             }
         } catch (error) {
-            console.error(error);
-            return toast.error('An error occurred', {
+            console.error("Error creating payment method:", error);
+            toast.error(`Error: ${error.message}`, {
                 position: 'top-right',
                 autoClose: 3000,
                 hideProgressBar: false,
@@ -109,6 +135,8 @@ const AccountDetails = ({ name, uemail }) => {
                 draggable: true,
                 theme: 'dark',
             });
+        } finally {
+            setLoading(false); // Stop loading once submission is complete
         }
     };
 
@@ -144,19 +172,7 @@ const AccountDetails = ({ name, uemail }) => {
                                             className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
                                         />
                                     </div>
-                                    <div className="md:col-span-2">
-                                        <label htmlFor="contact" className="block text-sm font-medium">Contact Number</label>
-                                        <input
-                                            type="text"
-                                            name="contact"
-                                            id="contact"
-                                            value={formData.contact}
-                                            onChange={handleChange}
-                                            required
-                                            placeholder="+1234567890"
-                                            className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
-                                        />
-                                    </div>
+
                                     <div className="md:col-span-1">
                                         <label htmlFor="gender" className="block text-sm font-medium">Gender</label>
                                         <select
@@ -168,9 +184,9 @@ const AccountDetails = ({ name, uemail }) => {
                                             className="h-10 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded px-4 w-full bg-gray-50 text-gray-900 dark:text-gray-300"
                                         >
                                             <option value="">Select</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                            <option value="other">Other</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
                                         </select>
                                     </div>
                                     <div className="md:col-span-1">
@@ -212,10 +228,10 @@ const AccountDetails = ({ name, uemail }) => {
                         <div className="mt-6 text-right">
                             <button
                                 type="submit"
-                                className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                disabled={!stripe}
+                                className={`bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={loading || !stripe}
                             >
-                                Submit
+                                {loading ? 'Processing...' : 'Submit'}
                             </button>
                         </div>
                     </form>
@@ -245,9 +261,8 @@ export async function getServerSideProps(context) {
             }
         };
     }
-
     const user = await User.findOne({"email": session.user.email});
-    if (!user.email || !user.name || !user.gender || !user.joinDate) {
+    if (!user.email || !user.name || !user.gender || !user.cardDetail || !user.stripeID) {
         return {
             props: {
                 "name": session.user.name || "",

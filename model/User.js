@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   gender: { type: String },
   active: { type: Boolean, default: true }, 
   cardDetail: { type: Boolean, default: false }, 
+  stripeID: { type: String }, 
   DOB : {type : Date}
 
 },{ timestamps: true});
