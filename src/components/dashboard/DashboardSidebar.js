@@ -17,7 +17,7 @@ const Data = [
   {
     icon: FaUsers,
     title: "Users",
-    link: "/Users",
+    link: "/dashboard/Users",
   },
   {
     icon: FaHotel,
