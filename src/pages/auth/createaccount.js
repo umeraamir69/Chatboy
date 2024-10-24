@@ -5,9 +5,7 @@ import { authOptions } from "../api/auth/[...nextauth]";
 var cookie = require('cookie');
 import { toast } from 'react-toastify';
 import User from '../../../model/User';
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3"
-import axios from 'axios';
-import Recaptchav2 from '../../../components/Recaptchav2';
+
 
 
 
@@ -28,53 +26,15 @@ const Createaccount = ({ providers }) => {
     }, [providers])
 
 
-    const { executeRecaptcha } = useGoogleReCaptcha()
     
  
     const handleSignIn = async (event) => {
         event.preventDefault();
         //check for captcha
-        if (!executeRecaptcha) {
-            return toast.warn("Please Try again.", {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "dark",
-            });
-        }
-        if (!captchav2){
-            try{
-            const token = await executeRecaptcha('CreateAccount');
-            const response = await axios.post('/api/verifyRecaptcha', { token });
-            }
-            catch(error){
-                toast.error("Verify captcha", {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    theme: "dark",
-                });
-                return setcaptchav2(true);
-            }
-        }
+        
+     
         try {
-            if(captchav2 && recaptchaValue == null){
-               return  toast.error("Please Verify captcha ", {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    theme: "dark",
-                });
-            }
+
 
             toast.info("Email Send", {
                 position: "top-right",
@@ -160,11 +120,7 @@ const Createaccount = ({ providers }) => {
                             </div>
                         </div>
 
-                       {captchav2 && 
-                        <div className='flex justify-center mb-4'>
-                            <Recaptchav2 onChange={handleRecaptcha}/>
-                        </div>
-                        }
+
                 
                         <div className="flex -mx-3">
                             <div className="w-full px-3 mb-5">
