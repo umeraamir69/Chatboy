@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, Search, Settings, User, MessageCircle, Clock, Bookmark, BarChart2, LogOut, Moon, Send, Bot } from 'lucide-react';
 import { VscLayoutSidebarLeft } from 'react-icons/vsc';
 import { FaArrowsLeftRightToLine } from 'react-icons/fa6';
+import { useSession, signIn, signOut } from 'next-auth/react';
+
+import {toast} from 'react-toastify';
 
 const ModernChatInterface = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
@@ -17,6 +20,21 @@ const ModernChatInterface = () => {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const { data: session, status } = useSession();
+
+  const handleLogout = ()=>{
+     toast.success(`Thanks for Using Our Services`, {
+      position: 'top-right',
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: 'dark',
+  });
+    return signOut()
+
+  }
 
   const menuItems = [
     { icon: MessageCircle, label: 'AI Chat Helper', active: true },
@@ -167,8 +185,11 @@ const ModernChatInterface = () => {
             <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
               <User size={18} />
             </div>
-            <span className="flex-1 text-sm font-medium">Log out</span>
-            <LogOut size={18} />
+          {session && <>
+            <span  onClick={handleLogout} className="flex-1 text-sm font-medium">Log out</span>
+            <LogOut size={18}  onClick={handleLogout}/>
+          </>}
+           
           </button>
         </div>
       </div>
