@@ -8,7 +8,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <Navbar/>
-      <div className='bg-gray-200 min-h-screen px-8'>
+      <div className='bg-gray-200 min-h-screen px-2 md:px-8 mt-32'>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5 mt-5 ">
       <CardDataStats title="Total views" total="$3.456K" rate="0.43%" levelUp>
       <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
