@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, X, Search, Settings, User, MessageCircle, Clock, Bookmark, BarChart2, LogOut, Moon, Send, Bot } from 'lucide-react';
+import { Menu, X, Search, Settings, User, MessageCircle, Clock, Trophy, BarChart2, LogOut, Moon, Send, Bot , BadgeDollarSign} from 'lucide-react';
 import { VscLayoutSidebarLeft } from 'react-icons/vsc';
 import { FaArrowsLeftRightToLine } from 'react-icons/fa6';
 import { useSession, signIn, signOut } from 'next-auth/react';
-
+import { TbTransactionDollar } from "react-icons/tb";
+import { MdOutlineCardMembership } from "react-icons/md";
 import {toast} from 'react-toastify';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 const ModernChatInterface = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
@@ -18,6 +21,13 @@ const ModernChatInterface = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
   ]);
+  const router = useRouter();
+
+  const isActiveRoute = (path) => {
+    return router.pathname === path;
+  };
+
+
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const { data: session, status } = useSession();
@@ -37,11 +47,11 @@ const ModernChatInterface = () => {
   }
 
   const menuItems = [
-    { icon: MessageCircle, label: 'AI Chat Helper', active: true },
-    { icon: Bookmark, label: 'Templates', pro: true },
-    { icon: Clock, label: 'My Projects', pro: true },
-    { icon: BarChart2, label: 'Statistics', pro: true },
-    { icon: Settings, label: 'Settings' },
+    { icon: MessageCircle, label: 'AI Chat Helper', link : "/user" },
+    { icon: BadgeDollarSign, label: 'Payments' , link : "/payments"  },
+    { icon: TbTransactionDollar , label: 'Transaction' ,link : "/transaction" },
+    { icon: Trophy , label: 'Loyality Rewards' , link : "/rewards" },
+    { icon: MdOutlineCardMembership, label: 'Membership',link : "/membership"  },
   ];
 
   const chatHistory = [
@@ -131,68 +141,72 @@ const ModernChatInterface = () => {
     <div className="h-screen flex bg-slate-50">
       {/* Left Sidebar */}
       <div 
-        className={`${
-          leftSidebarOpen ? 'w-72' : 'w-0'
-        } fixed md:relative left-0 top-0 h-full bg-slate-900 transition-all duration-300 overflow-hidden flex flex-col z-20`}
-      >
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-pink-500 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-sm"></div>
-            </div>
-            <span className="text-white text-lg font-semibold">MindMerge</span>
+      className={`${
+        leftSidebarOpen ? 'w-72' : 'w-0'
+      } fixed md:relative left-0 top-0 h-full bg-slate-900 transition-all duration-300 overflow-hidden flex flex-col z-20`}
+    >
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-pink-500 rounded-lg flex items-center justify-center">
+            <div className="w-4 h-4 bg-white rounded-sm"></div>
           </div>
-          <button 
-            onClick={toggleLeftSidebar}
-            className="text-white hover:text-gray-300"
+          <span className="text-white text-lg font-semibold">MindMerge</span>
+        </div>
+        <button 
+          onClick={toggleLeftSidebar}
+          className="text-white hover:text-gray-300"
+        >
+          <VscLayoutSidebarLeft size={20} />
+        </button>
+      </div>
+
+      <div className="px-2 py-4">
+        {menuItems.map((item, index) => (
+          <Link href={item.link}>
+          <div
+            key={index}
+            className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${
+              isActiveRoute(item.link) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50'
+            } mb-1`}
           >
-            <VscLayoutSidebarLeft size={20} />
-          </button>
-        </div>
-
-        <div className="px-2 py-4">
-          {menuItems.map((item, index) => (
-            <button
-              key={index}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                item.active ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50'
-              }`}
-            >
+            
+            <div className="w-8 flex items-center justify-center">
               <item.icon size={20} />
-              <span className="flex-1 text-sm font-medium">{item.label}</span>
-              {item.pro && (
-                <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 text-orange-500 rounded">PRO</span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-auto p-4">
-          <div className="bg-gradient-to-r from-orange-400 to-pink-500 rounded-xl p-4 text-white">
-            <h3 className="font-semibold mb-1">Pro Plan</h3>
-            <p className="text-sm opacity-90 mb-3">Strengthen artificial intelligence: get plan!</p>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">$10 / mo</span>
-              <button className="px-3 py-1 bg-white text-orange-500 rounded-lg text-sm font-medium">
-                Get
-              </button>
             </div>
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-slate-800">
-          <button className="w-full flex items-center gap-3 text-slate-400 hover:text-white transition-colors">
-            <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
-              <User size={18} />
-            </div>
-          {session && <>
-            <span  onClick={handleLogout} className="flex-1 text-sm font-medium">Log out</span>
-            <LogOut size={18}  onClick={handleLogout}/>
-          </>}
+            <span className="text-sm font-medium pl-5 py-1">{item.label}</span>
            
-          </button>
+          </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-auto p-4">
+        <div className="bg-gradient-to-r from-orange-400 to-pink-500 rounded-xl p-4 text-white">
+          <h3 className="font-semibold mb-1">Pro Plan</h3>
+          <p className="text-sm opacity-90 mb-3">Strengthen artificial intelligence: get plan!</p>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">$10 / mo</span>
+            <button className="px-3 py-1 bg-white text-orange-500 rounded-lg text-sm font-medium">
+              Get
+            </button>
+          </div>
         </div>
       </div>
+
+      <div className="p-4 border-t border-slate-800">
+        <button className="w-full flex items-center gap-3 text-slate-400 hover:text-white transition-colors">
+          <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+            <User size={18} />
+          </div>
+          {session && (
+            <>
+              <span onClick={handleLogout} className="flex-1 text-sm font-medium">Log out</span>
+              <LogOut size={18} onClick={handleLogout} />
+            </>
+          )}
+        </button>
+      </div>
+    </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative">

@@ -15,7 +15,7 @@ export default function Navbar() {
   };
 
   return (
-    <Disclosure as="nav" className="bg-blue-950 fixed top-0 left-0 right-0 z-20 py-1">
+    <Disclosure as="nav" className="bg-blue-950 fixed top-0 left-0 right-0 z-20 py-2">
       <div className="w-full px-4">
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-center justify-start">

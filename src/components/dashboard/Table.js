@@ -1,17 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTable, usePagination, useGlobalFilter, useSortBy } from 'react-table';
-import { Search, RefreshCw, Edit2, Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
+import { Search, RefreshCw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
 
 const Table = ({ 
   columns, 
   data, 
-  onEdit, 
-  onDelete, 
+  actions = [], // Array of action objects
   onRefresh,
   filters = [],
   isLoading = false
 }) => {
-  // ... (previous state and hooks remain the same)
   const [filterValues, setFilterValues] = useState({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterPopupRef = useRef(null);
@@ -65,13 +63,27 @@ const Table = ({
     setIsFilterOpen(false);
   };
 
+  // Helper function to get action button color
+  const getActionButtonStyles = (type) => {
+    const baseStyles = "p-1 transition-colors";
+    switch (type) {
+      case 'delete':
+        return `${baseStyles} text-red-600 hover:text-red-800`;
+      case 'edit':
+        return `${baseStyles} text-blue-600 hover:text-blue-800`;
+      case 'view':
+        return `${baseStyles} text-green-600 hover:text-green-800`;
+      default:
+        return `${baseStyles} text-gray-600 hover:text-gray-800`;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full max-h-screen bg-white rounded-lg shadow-lg">
-      {/* Fixed Header Section with modified search bar */}
-      <div className="flex-none bg-white  p-4 border-b">
+      {/* Fixed Header Section */}
+      <div className="flex-none bg-white p-4 border-b">
         <div className="flex justify-between items-center gap-4">
-          {/* Left side with search */}
-          <div className="w-64"> {/* Fixed width for search bar */}
+          <div className="w-64">
             <div className="relative">
               <input
                 type="text"
@@ -84,7 +96,6 @@ const Table = ({
             </div>
           </div>
 
-          {/* Right side with filter and refresh buttons */}
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
@@ -201,9 +212,11 @@ const Table = ({
                           </div>
                         </th>
                       ))}
-                      <th className="sticky top-0 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                        Actions
-                      </th>
+                      {actions.length > 0 && (
+                        <th className="sticky top-0 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                          Actions
+                        </th>
+                      )}
                     </tr>
                   ))}
                 </thead>
@@ -220,22 +233,22 @@ const Table = ({
                             {cell.render('Cell')}
                           </td>
                         ))}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => onEdit(row.original)}
-                              className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => onDelete(row.original)}
-                              className="p-1 text-red-600 hover:text-red-800 transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
+                        {actions.length > 0 && (
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div className="flex space-x-2">
+                              {actions.map((action, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => action.onClick(row.original)}
+                                  className={getActionButtonStyles(action.type)}
+                                  title={action.label}
+                                >
+                                  {action.icon}
+                                </button>
+                              ))}
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
