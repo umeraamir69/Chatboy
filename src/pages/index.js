@@ -183,7 +183,7 @@ const ModernChatInterface = () => {
       <div className="mt-auto p-4">
         <div className="bg-gradient-to-r from-orange-400 to-pink-500 rounded-xl p-4 text-white">
           <h3 className="font-semibold mb-1">Pro Plan</h3>
-          <p className="text-sm opacity-90 mb-3">Strengthen artificial intelligence: get plan!</p>
+          <p className="text-sm opacity-90 mb-3">Strengthen artificial helloe intelligence: get plan!</p>
           <div className="flex items-center justify-between">
             <span className="text-sm">$10 / mo</span>
             <button className="px-3 py-1 bg-white text-orange-500 rounded-lg text-sm font-medium">
